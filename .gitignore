@@ -1,0 +1,6 @@
+*.log
+ipython_scripts/
+__pycache__/
+test/
+.old/
+.ipynb_checkpoints/
