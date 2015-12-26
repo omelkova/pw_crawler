@@ -1,6 +1,7 @@
 *.log
 ipython_scripts/
-__pycache__/
+pw_parsing/__pycache__/
+logs/
 test/
 .old/
 .ipynb_checkpoints/

@@ -7,7 +7,7 @@ import lxml.html as html
 import logging
 
 
-entity = "mashup"
+entity = "mashup"  # can be 'service' or 'mashup' 
 categories_source = '../categories_list/categories.csv'
 output_folder = 'categories_mashups/'
 

@@ -10,10 +10,10 @@ import os
 
 
 csv_dir = 'categories'
-experiment_name = 'adding_mashups'
-output_graph = 'graph/experiment_graph.ttl'
-new_experiment = False  # if true then new graph will be created and initialized
-# if false, then old file with specified name will be readed and
+experiment_name = 'for_test'
+output_graph = 'graph/some_graph.ttl'
+new_experiment = True  # if true then new graph will be created and initialized
+# if false, then old file with specified name will be read and
 # processed
 
 
@@ -48,8 +48,8 @@ def iterate_directory(csv_dir, graph, experiment_name):
 
 
 def service_is_in_graph(service_name, graph):
-    # service = Namespace("http://www.programmableweb.com/api/").term(service_name)
-    service = Namespace("http://www.programmableweb.com/mashup/").term(service_name)
+    service = Namespace("http://www.programmableweb.com/api/").term(service_name)
+    # service = Namespace("http://www.programmableweb.com/mashup/").term(service_name)
     if (service, None, None) in graph:
         return True
     else:
@@ -61,16 +61,16 @@ def process_csv(file_name, graph):
     with open(file_name) as csvfile:
         readCSV = csv.reader(csvfile, delimiter=',')
         for row in readCSV:
-            # service_name = row[0].replace("/api/", "")
-            service_name = row[0].replace("/mashup/", "")
+            service_name = row[0].replace("/api/", "")
+            # service_name = row[0].replace("/mashup/", "")
             logging.info("Processing service %s", service_name)
             date = row[1]
             if not service_is_in_graph(service_name, graph):
                 try:
-                    # entity = Entity.factory("Service", service_name)
-                    entity = Entity.factory("Mashup", service_name)
+                    entity = Entity.factory("Service", service_name)
+                    # entity = Entity.factory("Mashup", service_name)
                     graph = entity.tordf(graph)
-                    # e.add_attachment_to_dataset(entity, graph)
+                    e.add_attachment_to_dataset(entity, graph)
                     e.add_creation_date(entity, date, graph)
                 except:
                     logging.error("Something wrong with the service %s", service_name, exc_info=True)

@@ -11,7 +11,7 @@ import logging
 
 
 def add_categories_to_graph(graph):
-    with open('parse_categories/categories.csv') as csvfile:
+    with open('categories_list/categories.csv') as csvfile:
         readCSV = csv.reader(csvfile, delimiter=',')
         for row in readCSV:
             category = URIRef(Entity.pw+row[1])
@@ -74,7 +74,7 @@ def parse_page_mashups(page):
 
     def get_mashups_content(page):
         a = html.parse(page).xpath(".//table")
-        table = a[0].getchildren()[1]
+        table = a[2].getchildren()[1]
         developers = {}
         for i in table.getchildren():
             name = i.getchildren()[0].find(".//a").get("href")
@@ -376,7 +376,7 @@ class Service(Entity):
 
     def get_mashups_list_url(self, root):
         a = root.find(".//section[@id='block-views-api-mashups-new-list-top']")
-        href = a.xpath('.//a[text()="/View all"]')[0].get("href")
+        href = a.xpath('.//a[text()="View all"]')[0].get("href")
         return "http://www.programmableweb.com" + href
 
     def tordf(self, graph):

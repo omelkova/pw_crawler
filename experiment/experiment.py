@@ -60,6 +60,39 @@ def get_intersections(services, S, g):
     secondary_intersection = [val for val in services_categories[1] if val in S]
     return (primary_intersection, secondary_intersection)
 
+# Added functionality for SC computation considering usage history
+
+
+def intersections_with_weight(categories, S, diffusion_frame_for_weights):
+    total_weight = 0
+    categories = [s.replace("http://www.programmableweb.com/category/", "") for s in categories]
+    S = [s.replace("http://www.programmableweb.com/category/", "") for s in S]
+    for cat in categories:
+        for s in S:
+            # if cat == s:
+            #    total_weight += 1
+            # else:
+            total_weight += diffusion_frame_for_weights[cat][s]
+    return total_weight
+
+
+def get_intersections_with_weights(services, S, g, diffusion_frame_for_weights):
+    services_categories = get_categories(services, g)
+    primary_intersection_weight = intersections_with_weight(services_categories[0], S, diffusion_frame_for_weights)  # [val for val in services_categories[0] if val in S]
+    secondary_intersection_weight = intersections_with_weight(services_categories[1], S, diffusion_frame_for_weights)  # [val for val in services_categories[1] if val in S]
+    return (primary_intersection_weight, secondary_intersection_weight)
+
+
+def sc_with_weights(services, S, g, diffusion_frame_for_weights):
+    # services_categories = get_categories(services)
+    # primary_intersection = [val for val in services_categories[0] if val in S]
+    # secondary_intersection = [val for val in services_categories[1] if val in S]
+    intersections = get_intersections_with_weights(services, S, g, diffusion_frame_for_weights)
+    return (intersections[0]+0.3*intersections[1])/len(S)  # number of requested categories in service is devided by size of requested categories
+
+
+# End of addition
+
 
 def sc(services, S, g):
     # services_categories = get_categories(services)
@@ -67,6 +100,8 @@ def sc(services, S, g):
     # secondary_intersection = [val for val in services_categories[1] if val in S]
     intersections = get_intersections(services, S, g)
     return (len(intersections[0])+0.3*len(intersections[1]))/len(S)  # number of requested categories in service is devided by size of requested categories
+    # weight 0.3 means that the weight of secondary category is 0.3 from primary
+    # category
 
 
 def re(services, S, g):
@@ -117,8 +152,9 @@ def dt(services, g):
     return result
 
 
-def score(g, services, S, lambda1, lambda2, lambda3):
-    return [lambda1*sc(services, S, g), lambda2*re(services, S, g), lambda3*dt(services, g)]
+def score(g, services, S, lambda1, lambda2, lambda3, df_weights):
+    return [lambda1*sc_with_weights(services, S, g, df_weights), lambda2, lambda3*dt(services, g)]
+# re(services, S, g),
 
 
 # TODO add filter by date
@@ -140,18 +176,26 @@ def candidate_set(query, g):
     return set_of_services
 
 
+def candidate_set_all_activated(g):
+    rows = g.query("""SELECT DISTINCT ?s WHERE {?s ?p api_network:API .
+                    ?m ?p api_network:Mashup .
+                    ?m gr:include ?s .
+                    }""", initNs=ns)
+    return [t["?s"] for t in rows.bindings]
+
+
 # main experiment
-def compose_B_table(s, I, g, S, lambda1, lambda2, lambda3):
+def compose_B_table(s, I, g, S, lambda1, lambda2, lambda3, df_weights):
     temp_I = I + [s]
-    curr_score = score(g, temp_I, S, lambda1, lambda2, lambda3)
+    curr_score = score(g, temp_I, S, lambda1, lambda2, lambda3, df_weights)
     return (temp_I, sum(curr_score))
 
 
-def Greedy(g, S, M, k, lambda1, lambda2, lambda3):
+def Greedy(g, S, M, k, lambda1, lambda2, lambda3, df_weights):
     I = []  # recommendation set of services
     B = 0  # current score
     for i in range(k):
-        B_table = [compose_B_table(s, I, g, S, lambda1, lambda2, lambda3) for s in M]
+        B_table = [compose_B_table(s, I, g, S, lambda1, lambda2, lambda3, df_weights) for s in M]
         I, B = max(B_table, key=operator.itemgetter(1))
         M = [x for x in M if x not in I]  # delete added elements from candidate set
     return (I, B)
